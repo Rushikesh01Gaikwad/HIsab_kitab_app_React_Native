@@ -25,10 +25,10 @@ export default function LoginPage({ navigation }) {
       // const response = await UserService.getAllUsers();
       // const users = response.data;
 
-      const url = "https://localhost:7023/api/Users"
-        let user = await fetch(url);
-        result = await user.json();
-        console.warn(result)
+      const response =  await fetch('https://localhost:7023/api/Users');
+      console.warn(response)
+      const user = await response.json();
+      
 
       // Validate the entered mobile and password
     //   user.find(
