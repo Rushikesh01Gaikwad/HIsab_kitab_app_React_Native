@@ -5,46 +5,29 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
+  Alert, ActivityIndicator
 } from 'react-native';
 import { UserService } from '../apiService'; // Import the UserService
+import axios from 'axios';
 
 export default function LoginPage({ navigation }) {
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
+  const [showLoader, setShowLoader] = useState(false);
 
   const handleLogin = async () => {
-    
-    if (!mobile || !password) {
-      Alert.alert('Validation Error', 'Please enter both mobile number and password.');
-      return;
-    }
 
-    // try {
-      // // Fetch all users
-      // const response = await UserService.getAllUsers();
-      // const users = response.data;
 
-      const response =  await fetch('https://localhost:7023/api/Users');
-      console.warn(response)
-      const user = await response.json();
-      
+    setShowLoader(true)
 
-      // Validate the entered mobile and password
-    //   user.find(
-    //     (u) => u.mobile == mobile && u.password == password
-    //   );
+      const url = 'https://10.0.2.2:7023/api/users'; // Use http for local testing
+      let result= axios.get(url)
+      data = result.data;
+      console.warn(data)
 
-    //   if (user) {
-    //     Alert.alert('Login Successful', `Welcome, ${user.name}!`);
-    //     navigation.navigate('Home', { user }); // Navigate to Home and pass the user object
-    //   } else {
-    //     Alert.alert('Login Failed', 'Invalid mobile number or password.');
-    //   }
-    // } catch (error) {
-    //   Alert.alert('Error', 'Unable to login. Please try again later.');
-    //   console.log(error)
-    // }
+    // navigation.navigate('Home'); // Navigate to Home and pass the user object
+    setShowLoader(false)
+
   };
 
   return (
@@ -74,6 +57,10 @@ export default function LoginPage({ navigation }) {
         onPress={() => navigation.navigate('Register')}>
         <Text style={styles.linkText}>Register</Text>
       </TouchableOpacity>
+
+      {
+        showLoader ? <ActivityIndicator size={50} color='green' /> : null
+      }
     </View>
   );
 }
