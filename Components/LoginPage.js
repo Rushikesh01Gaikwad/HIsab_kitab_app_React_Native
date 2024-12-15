@@ -1,33 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert, ActivityIndicator
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserService } from '../apiService'; // Import the UserService
-import axios from 'axios';
 
 export default function LoginPage({ navigation }) {
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
   const [showLoader, setShowLoader] = useState(false);
 
+  useEffect(() => {
+    // Check if user data is already stored
+    const checkLoginStatus = async () => {
+      const storedUser = await AsyncStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        navigation.navigate('Home', { userId: user.id });
+      }
+    };
+
+    checkLoginStatus();
+  }, [navigation]);
+
   const handleLogin = async () => {
+    // Input validation
+    if (!mobile || !password) {
+      Alert.alert('Validation Error', 'Mobile and Password are required!');
+      return;
+    }
 
+    if (mobile.length !== 10 || isNaN(mobile)) {
+      Alert.alert('Validation Error', 'Enter a valid 10-digit mobile number!');
+      return;
+    }
 
-    setShowLoader(true)
+    setShowLoader(true);
 
-      const url = 'https://10.0.2.2:7023/api/users'; // Use http for local testing
-      let result= axios.get(url)
-      data = result.data;
-      console.warn(data)
+    try {
+      // API call to validate user credentials
+      const response = await UserService.getAllUsers();
+      const users = response.data;
 
-    // navigation.navigate('Home'); // Navigate to Home and pass the user object
-    setShowLoader(false)
+      // Check if the user exists with the provided credentials
+      const user = users.find(
+        (u) => u.mobile === mobile && u.password === password
+      );
 
+      if (user) {
+        // Save user data to AsyncStorage
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+
+        // Navigate to Home with user data
+        navigation.navigate('Home', { userId: user.id });
+      } else {
+        Alert.alert('Login Failed', 'Invalid mobile or password!');
+      }
+    } catch (error) {
+      console.error('Login error:', error.message);
+      Alert.alert('Error', 'Something went wrong while logging in.');
+    } finally {
+      setShowLoader(false);
+    }
   };
 
   return (
@@ -58,9 +98,7 @@ export default function LoginPage({ navigation }) {
         <Text style={styles.linkText}>Register</Text>
       </TouchableOpacity>
 
-      {
-        showLoader ? <ActivityIndicator size={50} color='green' /> : null
-      }
+      {showLoader && <ActivityIndicator size={50} color="green" />}
     </View>
   );
 }

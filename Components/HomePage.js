@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,14 @@ import {
   FlatList,
   StyleSheet,
   Modal,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Footer from './Footer';
+import { CustomerService } from '../apiService'; // Import your API service
 
 export default function HomePage() {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -21,13 +25,53 @@ export default function HomePage() {
     'Newspaper',
   ]);
   const [newBusiness, setNewBusiness] = useState('');
-  const [customers, setCustomers] = useState([
-    'John Doe',
-    'Jane Smith',
-    'Robert Brown',
-  ]);
-
+  const [customers, setCustomers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(''); // State for search query
+  const [filteredCustomers, setFilteredCustomers] = useState([]); // Filtered customers
+  const [loading, setLoading] = useState(false); // State for loading spinner
+  const [userID, setUserId] = useState(null);
   const navigation = useNavigation();
+
+  const getUserID = async () => {
+    try {
+      const storedUser = await AsyncStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        return user.userID;
+      }
+    } catch (error) {
+      console.warn('Error fetching user data:', error.message);
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    (async () => {
+      const retrievedUserID = await getUserID();
+      if (!retrievedUserID) {
+        Alert.alert('Error', 'Unable to retrieve user ID. Please try again.');
+        return;
+      }
+      setUserId(retrievedUserID);
+      fetchCustomers();
+    })();
+  }, []);
+
+  // Fetch customers from API
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      const response = await CustomerService.getAllCustomersById(userID);
+      const customerData = response.data || [];
+      setCustomers(customerData);
+      setFilteredCustomers(customerData); // Initialize filtered customers
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      alert('Failed to load customers.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddBusiness = () => {
     if (newBusiness.trim()) {
@@ -36,27 +80,42 @@ export default function HomePage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('user'); // Clear the stored user data
+      navigation.navigate('Login'); // Navigate back to the Login screen
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
+  // Filter customers based on search query
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredCustomers(customers);
+    } else {
+      const filtered = customers.filter((customer) =>
+        customer.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredCustomers(filtered);
+    }
+  }, [searchQuery, customers]);
+
   return (
     <View style={styles.container}>
       {/* Header Section */}
       <View style={styles.header}>
-        {/* Company Name on the Left */}
         <Text style={styles.companyName}>Hisab Kitab</Text>
-
-        {/* Add Business and Add Staff Buttons on the Right */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             onPress={() => setModalVisible(true)}
             style={styles.addBusinessButton}>
             <Text style={styles.headerButtonText}>Add Business</Text>
-            {/* <Icon name="arrow-drop-down" size={20} color="#fff" /> */}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.addStaffButton}
-            onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.headerButtonText}>Add Staff</Text>
           </TouchableOpacity>
         </View>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Business Modal */}
@@ -96,23 +155,33 @@ export default function HomePage() {
 
       {/* Total Amount Section */}
       <View style={styles.summarySection}>
-        <Text style={styles.summaryText}>Total Received: ₹5000</Text>
+        <Text style={styles.summaryText}>Total Received: {}</Text>
         <Text style={styles.summaryText}>Total To Receive: ₹2000</Text>
       </View>
 
       {/* Search Bar */}
-      <TextInput style={styles.searchBar} placeholderTextColor='gray' placeholder="Search Customer" />
+      <TextInput
+        style={styles.searchBar}
+        placeholderTextColor="gray"
+        placeholder="Search Customer"
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
 
       {/* Customer List */}
-      <FlatList
-        data={customers}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.customerItem}>
-            <Text style={styles.customerText}>{item}</Text>
-          </View>
-        )}
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 20 }} />
+      ) : (
+        <FlatList
+          data={filteredCustomers} // Use filtered customers for display
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.customerItem}>
+              <Text style={styles.customerText}>{item.name}</Text> {/* Adjust key as per API */}
+            </View>
+          )}
+        />
+      )}
 
       {/* Footer Component */}
       <Footer navigation={navigation} activeTab="Home" />
@@ -127,17 +196,25 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // This ensures the elements are spaced between
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 15,
     paddingHorizontal: 20,
     backgroundColor: '#007bff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
   },
   companyName: {
     color: '#fff',
     fontSize: 22,
+    fontWeight: 'bold',
+  },
+  logoutButton: {
+    backgroundColor: '#dc3545',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  logoutText: {
+    color: '#fff',
     fontWeight: 'bold',
   },
   buttonContainer: {
@@ -148,21 +225,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#28a745',
     paddingVertical: 10,
     paddingHorizontal: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
     borderRadius: 5,
     marginRight: 10,
-  },
-  addStaffButton: {
-    backgroundColor: '#28a745',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 5,
   },
   headerButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    marginRight: 5,
   },
   summarySection: {
     padding: 20,

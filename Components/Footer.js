@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 
 export default function Footer({ navigation, activeTab }) {
   return (
@@ -13,7 +12,6 @@ export default function Footer({ navigation, activeTab }) {
         ]}
         onPress={() => navigation.navigate('Home')}
       >
-        {/* <Icon name="home" size={24} color={activeTab === 'Home' ? '#fff' : '#007bff'} /> */}
         <Text style={[styles.footerTabText, activeTab === 'Home' && styles.activeText]}>
           Home
         </Text>
@@ -27,9 +25,21 @@ export default function Footer({ navigation, activeTab }) {
         ]}
         onPress={() => navigation.navigate('AddCustomer')}
       >
-        {/* <Icon name="person-add" size={24} color={activeTab === 'AddCustomer' ? '#fff' : '#007bff'} /> */}
         <Text style={[styles.footerTabText, activeTab === 'AddCustomer' && styles.activeText]}>
           Add Customer
+        </Text>
+      </TouchableOpacity>
+
+      {/* Add Staff Tab */}
+      <TouchableOpacity
+        style={[
+          styles.footerTab,
+          activeTab === 'AddStaff' && styles.activeTab,
+        ]}
+        onPress={() => navigation.navigate('addStaff')}
+      >
+        <Text style={[styles.footerTabText, activeTab === 'AddStaff' && styles.activeText]}>
+          Add Staff
         </Text>
       </TouchableOpacity>
     </View>

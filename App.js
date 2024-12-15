@@ -7,6 +7,7 @@ import HomePage from './Components/HomePage';
 import AddCustomerPage from './Components/AddCustomerPage'
 import NewCustomerPage from './Components/NewCustomerPage';
 import CustomerHomePage from './Components/CustomerHomePage';
+import addStaff from './Components/AddStaffpage';
 
 const Stack = createStackNavigator();
 
@@ -17,6 +18,7 @@ export default function App() {
         <Stack.Screen name="Login" component={LoginPage} options={{ headerShown: false }} />
         <Stack.Screen name="Register" component={RegisterPage} options={{ headerShown: false }} />
         <Stack.Screen name="Home" component={HomePage} options={{ headerShown: false }} />
+        <Stack.Screen name="addStaff" component={addStaff} options={{ headerShown: false }} />
         <Stack.Screen name="AddCustomer" component={AddCustomerPage} options={{ headerShown: false }} />
         <Stack.Screen name="NewCustomerPage" component={NewCustomerPage} />
         <Stack.Screen name="CustomerHomePage" component={CustomerHomePage} />

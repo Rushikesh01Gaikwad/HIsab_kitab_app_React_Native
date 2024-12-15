@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "https://localhost:7023/api"; // Your API base URL
+const BASE_URL = "http://10.0.2.2:5006/api"; // Your API base URL
 
 // Create an Axios instance
 const api = axios.create({
@@ -43,6 +43,9 @@ export const StaffService = {
 export const CustomerService = {
   getAllCustomers: async () => {
     return api.get("/Customers");
+  },
+  getAllCustomersById: async (id) => {
+    return api.get(`/Customers?userID=${id}`);
   },
   createCustomer: async (customer) => {
     return api.post("/Customers", customer);

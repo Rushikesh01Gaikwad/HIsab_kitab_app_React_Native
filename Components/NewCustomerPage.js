@@ -17,7 +17,7 @@ export default function NewCustomerPage({ navigation }) {
     Alert.alert('Success', `Customer ${name} added successfully!`);
     
     // Navigate to the Customer Home Page
-    navigation.navigate('CustomerHomePage');
+    navigation.navigate('CustomerHomePage',{ customerName: name, customerPhone: phone });
   };
 
   return (
