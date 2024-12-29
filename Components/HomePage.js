@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -11,10 +11,10 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Footer from './Footer';
-import { CustomerService } from '../apiService'; // Import your API service
+import {CustomerService} from '../apiService'; // Import your API service
 
 export default function HomePage() {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -94,8 +94,8 @@ export default function HomePage() {
     if (searchQuery.trim() === '') {
       setFilteredCustomers(customers);
     } else {
-      const filtered = customers.filter((customer) =>
-        customer.name.toLowerCase().includes(searchQuery.toLowerCase())
+      const filtered = customers.filter(customer =>
+        customer.name.toLowerCase().includes(searchQuery.toLowerCase()),
       );
       setFilteredCustomers(filtered);
     }
@@ -129,7 +129,7 @@ export default function HomePage() {
             <FlatList
               data={businesses}
               keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
+              renderItem={({item}) => (
                 <Text style={styles.businessItem}>{item}</Text>
               )}
             />
@@ -155,8 +155,8 @@ export default function HomePage() {
 
       {/* Total Amount Section */}
       <View style={styles.summarySection}>
+        <Text style={styles.summaryText}>Total Paid: {}</Text>
         <Text style={styles.summaryText}>Total Received: {}</Text>
-        <Text style={styles.summaryText}>Total To Receive: ₹2000</Text>
       </View>
 
       {/* Search Bar */}
@@ -170,15 +170,24 @@ export default function HomePage() {
 
       {/* Customer List */}
       {loading ? (
-        <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 20 }} />
+        <ActivityIndicator
+          size="large"
+          color="#007bff"
+          style={{marginTop: 20}}
+        />
       ) : (
         <FlatList
           data={filteredCustomers} // Use filtered customers for display
           keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.customerItem}>
-              <Text style={styles.customerText}>{item.name}</Text> {/* Adjust key as per API */}
-            </View>
+          renderItem={({item}) => (
+            <TouchableOpacity
+              style={styles.customerItem}
+              onPress={() =>
+                navigation.navigate('CustomerHomePage', {customer: item})
+              }>
+              <Text style={styles.customerText}>{item.name}</Text>{' '}
+              {/* Adjust key as per API */}
+            </TouchableOpacity>
           )}
         />
       )}

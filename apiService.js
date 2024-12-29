@@ -50,4 +50,7 @@ export const CustomerService = {
   createCustomer: async (customer) => {
     return api.post("/Customers", customer);
   },
+  editCustomer: async (id, customer) => {
+    return api.put(`/Customers/${id}`, customer);
+  },
 };

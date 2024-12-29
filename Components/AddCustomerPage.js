@@ -1,21 +1,63 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Correct Icon import
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, PermissionsAndroid, Platform, TouchableHighlight, Alert } from 'react-native';
+import Contacts from 'react-native-contacts';
 import Footer from './Footer';
 
 export default function AddCustomerPage({ navigation }) {
   const [search, setSearch] = useState('');
-  const [contacts, setContacts] = useState([
-    { name: 'John Doe', phone: '123-456-7890' },
-    { name: 'Jane Smith', phone: '987-654-3210' },
-    { name: 'Robert Brown', phone: '555-555-5555' },
-    { name: 'Emily Davis', phone: '444-444-4444' },
-  ]);
+  const [contacts, setContacts] = useState([]);
+  const [filteredContacts, setFilteredContacts] = useState([]);
+
+  useEffect(() => {
+    requestContactsPermission();
+  }, []);
+
+  // Request permission to access contacts
+  const requestContactsPermission = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_CONTACTS);
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        loadContacts();
+      } else {
+        Alert.alert('Contacts permission denied');
+      }
+    } else {
+      loadContacts(); // iOS does not need explicit permissions in most cases
+    }
+  };
+
+  // Load contacts from the device
+  const loadContacts = () => {
+    Contacts.getAll()
+      .then(contactList => {
+        const formattedContacts = contactList.map(contact => ({
+          name: contact.displayName || 'No Name',
+          phone: contact.phoneNumbers[0]?.number || 'No Number',
+        }));
+        setContacts(formattedContacts);
+        setFilteredContacts(formattedContacts); // Initially show all contacts
+      })
+      .catch(error => {
+        console.error('Failed to load contacts:', error);
+      });
+  };
 
   // Filter contacts based on search query
-  const filteredContacts = contacts.filter(contact =>
-    contact.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleSearch = text => {
+    setSearch(text);
+    const filtered = contacts.filter(contact =>
+      contact.name.toLowerCase().includes(text.toLowerCase())
+    );
+    setFilteredContacts(filtered);
+  };
+
+  // Navigate to CustomerHomePage with selected contact details
+  const navigateToCustomerHome = (contact) => {
+    navigation.navigate('CustomerHomePage', {
+      customerName: contact.name,
+      customerPhone: contact.phone,
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -25,8 +67,8 @@ export default function AddCustomerPage({ navigation }) {
           style={styles.searchBar}
           placeholder="Search Contact"
           value={search}
-          placeholderTextColor='gray'
-          onChangeText={setSearch}
+          placeholderTextColor="gray"
+          onChangeText={handleSearch}
         />
       </View>
 
@@ -35,17 +77,24 @@ export default function AddCustomerPage({ navigation }) {
         data={filteredContacts}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <View style={styles.contactItem}>
-            <Text style={styles.contactName}>{item.name}</Text>
-            <Text style={styles.contactPhone}>{item.phone}</Text>
-          </View>
+          <TouchableHighlight
+            underlayColor="#ddd"
+            onPress={() => navigateToCustomerHome(item)} // Navigate on click
+            style={styles.contactItem}
+          >
+            <View style={styles.contactRow}>
+              <Text style={styles.contactName}>{item.name}</Text>
+              <Text style={styles.contactPhone}>{item.phone}</Text>
+            </View>
+          </TouchableHighlight>
         )}
       />
 
       {/* Add New Customer Button */}
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => navigation.navigate('NewCustomerPage')}>
+        onPress={() => navigation.navigate('NewCustomerPage')}
+      >
         <Text style={styles.addButtonText}>Add New Customer</Text>
       </TouchableOpacity>
 
@@ -78,14 +127,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   contactItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     backgroundColor: '#fff',
-    padding: 15,
     marginVertical: 5,
     marginHorizontal: 10,
     borderRadius: 8,
     elevation: 2,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 15,
   },
   contactName: {
     fontSize: 16,
@@ -108,17 +159,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#ccc',
-  },
-  footerTab: {
-    alignItems: 'center',
   },
 });
