@@ -55,44 +55,42 @@ export default function CustomerHomePage({route, navigation}) {
         (customer.discountInPer || customer.discountInRs)?.toString() || '',
       );
       setDescription(customer.description || '');
+      setReceivedAmount(customer.receivedAmt || 0);
       setCustomerID(customer.customerID || null);
       setIsDiscountPercentage(customer.discountInPer > 0);
     }
     console.log('Customer:', customer);
   }, [customer]);
 
-  // const calculateTotal = () => {
-  //   const rateNum = parseFloat(rate) || 0;
-  //   const quantityNum = parseFloat(quantity) || 0;
-  //   const discountNum = parseFloat(discount) || 0;
-
-  //   let total = rateNum * quantityNum;
-
-  //   if (isDiscountPercentage) {
-  //     total -= (total * discountNum) / 100;
-  //   } else {
-  //     total -= discountNum;
-  //   }
-
-  //   return total > 0 ? total.toFixed(2) : '0.00';
-  // };
-
   const calculateTotal = () => {
+    // const rateNum = parseFloat(rate) || 0;
+    // const quantityNum = parseFloat(quantity) || 0;
+    // const discountNum = parseFloat(discount) || 0;
+  
+    // let total = rateNum * quantityNum;
+  
+    // if (isDiscountPercentage) {
+    //   total -= (total * discountNum) / 100;
+    // } else {
+    //   total -= discountNum;
+    // }
+  
+    // // Subtract receivedAmount from the total
+    // total -= receivedAmount;
+  
+    // return total > 0 ? total.toFixed(2) : '0.00';
     const rateNum = parseFloat(rate) || 0;
     const quantityNum = parseFloat(quantity) || 0;
     const discountNum = parseFloat(discount) || 0;
-  
+
     let total = rateNum * quantityNum;
-  
+
     if (isDiscountPercentage) {
       total -= (total * discountNum) / 100;
     } else {
       total -= discountNum;
     }
-  
-    // Subtract receivedAmount from the total
-    total -= receivedAmount;
-  
+
     return total > 0 ? total.toFixed(2) : '0.00';
   };
   

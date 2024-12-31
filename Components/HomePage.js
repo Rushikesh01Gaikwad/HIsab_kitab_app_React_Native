@@ -30,6 +30,8 @@ export default function HomePage() {
   const [filteredCustomers, setFilteredCustomers] = useState([]); // Filtered customers
   const [loading, setLoading] = useState(false); // State for loading spinner
   const [userID, setUserId] = useState(null);
+  const [totalPaid, setTotalPaid] = useState(0); // State for total paid amount
+  const [totalReceived, setTotalReceived] = useState(0); // State for total received amount
   const navigation = useNavigation();
 
   const getUserID = async () => {
@@ -65,6 +67,16 @@ export default function HomePage() {
       const customerData = response.data || [];
       setCustomers(customerData);
       setFilteredCustomers(customerData); // Initialize filtered customers
+      
+      // Calculate total paid and received amounts
+      let paidTotal = 0;
+      let receivedTotal = 0;
+      customerData.forEach(customer => {
+        paidTotal += customer.total || 0;
+        receivedTotal += customer.receivedAmt || 0;
+      });
+      setTotalPaid(paidTotal);
+      setTotalReceived(receivedTotal);
     } catch (error) {
       console.error('Error fetching customers:', error);
       alert('Failed to load customers.');
@@ -155,8 +167,8 @@ export default function HomePage() {
 
       {/* Total Amount Section */}
       <View style={styles.summarySection}>
-        <Text style={styles.summaryText}>Total Paid: {}</Text>
-        <Text style={styles.summaryText}>Total Received: {}</Text>
+        <Text style={styles.summaryText}>Total Paid: {totalPaid}</Text>
+        <Text style={styles.summaryText}>Total Received: {totalReceived}</Text>
       </View>
 
       {/* Search Bar */}
