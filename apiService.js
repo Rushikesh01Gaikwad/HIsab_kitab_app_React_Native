@@ -53,4 +53,7 @@ export const CustomerService = {
   editCustomer: async (id, customer) => {
     return api.put(`/Customers/${id}`, customer);
   },
+  deleteCustomer: async (id) => {
+    return api.delete(`/Customers/${id}`);
+  },
 };
