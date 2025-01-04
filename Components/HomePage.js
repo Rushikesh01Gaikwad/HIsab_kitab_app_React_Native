@@ -31,6 +31,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false); // State for loading spinner
   const [userID, setUserId] = useState(null);
   const navigation = useNavigation();
+  const [selectedCustomer, setSelectedCustomer] = useState(null); // State for selected customer
+  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const getUserID = async () => {
     try {
@@ -101,6 +103,31 @@ export default function HomePage() {
       setFilteredCustomers(filtered);
     }
   }, [searchQuery, customers]);
+
+  const handleDeleteCustomer = async () => {
+    try {
+      setLoading(true);
+      await CustomerService.deleteCustomer(selectedCustomer.customerID); // Call delete API
+      const updatedCustomers = customers.filter(
+        (customer) => customer.id !== selectedCustomer.id
+      );
+      setCustomers(updatedCustomers);
+      setFilteredCustomers(updatedCustomers);
+      fetchCustomers();
+      Alert.alert('Success', 'Customer deleted successfully.');
+    } catch (error) {
+      console.log('Error deleting customer:', error);
+      console.log('Error', 'Failed to delete customer.');
+    } finally {
+      setLoading(false);
+      setDeleteModalVisible(false);
+    }
+  };
+
+  const handleLongPress = (customer) => {
+    setSelectedCustomer(customer);
+    setDeleteModalVisible(true);
+  };
 
   return (
     <View style={styles.container}>
@@ -184,14 +211,43 @@ export default function HomePage() {
             <TouchableOpacity
               style={styles.customerItem}
               onPress={() =>
-                navigation.navigate('CustomerHomePage', {customer: item})
-              }>
+                navigation.navigate('CustomerHomePage', {customer: item})}
+                onLongPress={() => handleLongPress(item)}>
               <Text style={styles.customerText}>{item.name}</Text>{' '}
               {/* Adjust key as per API */}
             </TouchableOpacity>
           )}
         />
       )}
+
+<Modal
+        transparent={true}
+        visible={isDeleteModalVisible}
+        animationType="slide"
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>
+              Are you sure you want to delete this customer?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.confirmButton}
+                onPress={handleDeleteCustomer}
+              >
+                <Text style={styles.buttonText}>Delete</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Footer Component */}
       <Footer navigation={navigation} activeTab="Home" />
@@ -312,6 +368,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   closeButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    elevation: 5,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  confirmButton: {
+    backgroundColor: '#dc3545',
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 10,
+    flex: 1,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 10,
+    flex: 1,
+    alignItems: 'center',
+  },
+  buttonText: {
     color: '#fff',
     fontWeight: 'bold',
   },
