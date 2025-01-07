@@ -15,6 +15,7 @@ import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Footer from './Footer';
 import {CustomerService} from '../apiService'; // Import your API service
+import {UserService} from '../apiService'; // Import your API service
 
 export default function HomePage() {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -33,13 +34,19 @@ export default function HomePage() {
   const navigation = useNavigation();
   const [selectedCustomer, setSelectedCustomer] = useState(null); // State for selected customer
   const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [paidAmount, setPaidAmount] = useState(0);
+  const [receivedAmount, setReceivedAmount] = useState(0);
 
   const getUserID = async () => {
     try {
       const storedUser = await AsyncStorage.getItem('user');
       if (storedUser) {
         const user = JSON.parse(storedUser);
+        setPaidAmount(user.paidAmount);
+        setReceivedAmount(user.recAmount);
+        // console.log(user)
         return user.userID;
+        
       }
     } catch (error) {
       console.warn('Error fetching user data:', error.message);
@@ -55,6 +62,7 @@ export default function HomePage() {
         return;
       }
       setUserId(retrievedUserID);
+
       fetchCustomers();
     })();
   }, []);
@@ -66,6 +74,7 @@ export default function HomePage() {
       const response = await CustomerService.getAllCustomersById(userID);
       const customerData = response.data || [];
       setCustomers(customerData);
+      // console.log('Customers:', customerData);
       setFilteredCustomers(customerData); // Initialize filtered customers
       
     } catch (error) {
@@ -108,6 +117,17 @@ export default function HomePage() {
     try {
       setLoading(true);
       await CustomerService.deleteCustomer(selectedCustomer.customerID); // Call delete API
+
+      // Fetch updated user data from the server
+    const response = await UserService.getUserById(userID); // Replace with your API endpoint
+    const updatedUser = response.data;
+      // Update AsyncStorage with the latest user data
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+
+      // Update local state
+      setPaidAmount(updatedUser.paidAmount);
+      setReceivedAmount(updatedUser.recAmount);
+
       const updatedCustomers = customers.filter(
         (customer) => customer.id !== selectedCustomer.id
       );
@@ -116,8 +136,8 @@ export default function HomePage() {
       fetchCustomers();
       Alert.alert('Success', 'Customer deleted successfully.');
     } catch (error) {
-      console.log('Error deleting customer:', error);
-      console.log('Error', 'Failed to delete customer.');
+      //console.log('Error deleting customer:', error);
+      Alert.alert('Error', 'Failed to delete customer.');
     } finally {
       setLoading(false);
       setDeleteModalVisible(false);
@@ -183,8 +203,8 @@ export default function HomePage() {
 
       {/* Total Amount Section */}
       <View style={styles.summarySection}>
-        <Text style={styles.summaryText}>Total Paid: {}</Text>
-        <Text style={styles.summaryText}>Total Received: {}</Text>
+        <Text style={styles.summaryText}>Total Paid: {paidAmount || 0}</Text>
+        <Text style={styles.summaryText}>Total Received: {receivedAmount || 0}</Text>
       </View>
 
       {/* Search Bar */}

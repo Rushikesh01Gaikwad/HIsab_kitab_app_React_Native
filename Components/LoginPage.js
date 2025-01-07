@@ -16,19 +16,6 @@ export default function LoginPage({ navigation }) {
   const [password, setPassword] = useState('');
   const [showLoader, setShowLoader] = useState(false);
 
-  useEffect(() => {
-    // Check if user data is already stored
-    const checkLoginStatus = async () => {
-      const storedUser = await AsyncStorage.getItem('user');
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        navigation.navigate('Home', { userId: user.id });
-      }
-    };
-
-    checkLoginStatus();
-  }, [navigation]);
-
   const handleLogin = async () => {
     // Input validation
     if (!mobile || !password) {

@@ -11,6 +11,7 @@ import {
   Modal,
 } from 'react-native';
 import {CustomerService} from '../apiService'; // Update the path accordingly
+import {UserService} from '../apiService'; // Update the path accordingly
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
@@ -63,22 +64,6 @@ export default function CustomerHomePage({route, navigation}) {
   }, [customer]);
 
   const calculateTotal = () => {
-    // const rateNum = parseFloat(rate) || 0;
-    // const quantityNum = parseFloat(quantity) || 0;
-    // const discountNum = parseFloat(discount) || 0;
-  
-    // let total = rateNum * quantityNum;
-  
-    // if (isDiscountPercentage) {
-    //   total -= (total * discountNum) / 100;
-    // } else {
-    //   total -= discountNum;
-    // }
-  
-    // // Subtract receivedAmount from the total
-    // total -= receivedAmount;
-  
-    // return total > 0 ? total.toFixed(2) : '0.00';
     const rateNum = parseFloat(rate) || 0;
     const quantityNum = parseFloat(quantity) || 0;
     const discountNum = parseFloat(discount) || 0;
@@ -171,12 +156,22 @@ export default function CustomerHomePage({route, navigation}) {
       if (customerID) {
         // // Call the editCustomer API for updating existing data
         await CustomerService.editCustomer(customerID, customerDataUpdate);
+        const response = await UserService.getUserById(retrievedUserID); // Replace with your API endpoint
+        const updatedUser = response.data;
+          // Update AsyncStorage with the latest user data
+          await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+    
         Alert.alert('Success', 'Customer details updated successfully!', [
           {text: 'OK', onPress: () => navigation.navigate('Home')},
         ]);
       } else {
         // Call the createCustomer API for new data
         await CustomerService.createCustomer(customerDataInsert);
+        const response = await UserService.getUserById(retrievedUserID); // Replace with your API endpoint
+        const updatedUser = response.data;
+          // Update AsyncStorage with the latest user data
+          await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+
         Alert.alert('Success', 'Customer details added successfully!', [
           {text: 'OK', onPress: () => navigation.navigate('Home')},
         ]);
