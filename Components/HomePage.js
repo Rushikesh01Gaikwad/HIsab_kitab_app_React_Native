@@ -19,13 +19,6 @@ import {UserService} from '../apiService'; // Import your API service
 
 export default function HomePage() {
   const [isModalVisible, setModalVisible] = useState(false);
-  const [businesses, setBusinesses] = useState([
-    'Water Plant',
-    'Milk',
-    'Dairy',
-    'Newspaper',
-  ]);
-  const [newBusiness, setNewBusiness] = useState('');
   const [customers, setCustomers] = useState([]);
   const [searchQuery, setSearchQuery] = useState(''); // State for search query
   const [filteredCustomers, setFilteredCustomers] = useState([]); // Filtered customers
@@ -36,17 +29,18 @@ export default function HomePage() {
   const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
   const [paidAmount, setPaidAmount] = useState(0);
   const [receivedAmount, setReceivedAmount] = useState(0);
+  const [businessName, setBusinessName] = useState('Hisab Kitab');
 
   const getUserID = async () => {
     try {
       const storedUser = await AsyncStorage.getItem('user');
       if (storedUser) {
         const user = JSON.parse(storedUser);
+        setBusinessName(user.businessName);
         setPaidAmount(user.paidAmount);
         setReceivedAmount(user.recAmount);
-        // console.log(user)
+        console.log(user);
         return user.userID;
-        
       }
     } catch (error) {
       console.warn('Error fetching user data:', error.message);
@@ -76,7 +70,6 @@ export default function HomePage() {
       setCustomers(customerData);
       // console.log('Customers:', customerData);
       setFilteredCustomers(customerData); // Initialize filtered customers
-      
     } catch (error) {
       console.error('Error fetching customers:', error);
       alert('Failed to load customers.');
@@ -85,10 +78,26 @@ export default function HomePage() {
     }
   };
 
-  const handleAddBusiness = () => {
-    if (newBusiness.trim()) {
-      setBusinesses([...businesses, newBusiness]);
-      setNewBusiness('');
+  const handleAddBusiness = async () => {
+    if (businessName.trim()) {
+      try {
+        // Save the business name to AsyncStorage
+        await AsyncStorage.setItem('businessName', businessName);
+
+        // Update the state with the new business name
+        setBusinessName(businessName);
+
+        // Close the modal
+        setModalVisible(false);
+
+        // Optional: Show success alert
+        Alert.alert('Success', 'Business name updated successfully.');
+      } catch (error) {
+        console.error('Error saving business name:', error);
+        Alert.alert('Error', 'Failed to save business name.');
+      }
+    } else {
+      Alert.alert('Validation', 'Please enter a valid business name.');
     }
   };
 
@@ -119,8 +128,8 @@ export default function HomePage() {
       await CustomerService.deleteCustomer(selectedCustomer.customerID); // Call delete API
 
       // Fetch updated user data from the server
-    const response = await UserService.getUserById(userID); // Replace with your API endpoint
-    const updatedUser = response.data;
+      const response = await UserService.getUserById(userID); // Replace with your API endpoint
+      const updatedUser = response.data;
       // Update AsyncStorage with the latest user data
       await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
 
@@ -129,7 +138,7 @@ export default function HomePage() {
       setReceivedAmount(updatedUser.recAmount);
 
       const updatedCustomers = customers.filter(
-        (customer) => customer.id !== selectedCustomer.id
+        customer => customer.id !== selectedCustomer.id,
       );
       setCustomers(updatedCustomers);
       setFilteredCustomers(updatedCustomers);
@@ -144,7 +153,7 @@ export default function HomePage() {
     }
   };
 
-  const handleLongPress = (customer) => {
+  const handleLongPress = customer => {
     setSelectedCustomer(customer);
     setDeleteModalVisible(true);
   };
@@ -153,7 +162,7 @@ export default function HomePage() {
     <View style={styles.container}>
       {/* Header Section */}
       <View style={styles.header}>
-        <Text style={styles.companyName}>Hisab Kitab</Text>
+        <Text style={styles.companyName}>{businessName}</Text>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             onPress={() => setModalVisible(true)}
@@ -167,6 +176,7 @@ export default function HomePage() {
       </View>
 
       {/* Business Modal */}
+      {/* Business Modal */}
       <Modal
         transparent={true}
         visible={isModalVisible}
@@ -174,24 +184,17 @@ export default function HomePage() {
         onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <FlatList
-              data={businesses}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({item}) => (
-                <Text style={styles.businessItem}>{item}</Text>
-              )}
+            <TextInput
+              style={styles.input}
+              placeholder="Enter business name"
+              value={businessName}
+              onChangeText={setBusinessName}
             />
-            <View style={styles.addBusinessRow}>
-              <TextInput
-                style={styles.input}
-                placeholder="Add new business"
-                value={newBusiness}
-                onChangeText={setNewBusiness}
-              />
-              <TouchableOpacity onPress={handleAddBusiness}>
-                <Icon name="add" size={30} color="#007bff" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={handleAddBusiness}
+              style={styles.submitButton}>
+              <Text style={styles.submitButtonText}>Submit</Text>
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setModalVisible(false)}>
@@ -204,7 +207,9 @@ export default function HomePage() {
       {/* Total Amount Section */}
       <View style={styles.summarySection}>
         <Text style={styles.summaryText}>Total Paid: {paidAmount || 0}</Text>
-        <Text style={styles.summaryText}>Total Received: {receivedAmount || 0}</Text>
+        <Text style={styles.summaryText}>
+          Total Received: {receivedAmount || 0}
+        </Text>
       </View>
 
       {/* Search Bar */}
@@ -231,8 +236,9 @@ export default function HomePage() {
             <TouchableOpacity
               style={styles.customerItem}
               onPress={() =>
-                navigation.navigate('CustomerHomePage', {customer: item})}
-                onLongPress={() => handleLongPress(item)}>
+                navigation.navigate('CustomerHomePage', {customer: item})
+              }
+              onLongPress={() => handleLongPress(item)}>
               <Text style={styles.customerText}>{item.name}</Text>{' '}
               {/* Adjust key as per API */}
             </TouchableOpacity>
@@ -240,12 +246,11 @@ export default function HomePage() {
         />
       )}
 
-<Modal
+      <Modal
         transparent={true}
         visible={isDeleteModalVisible}
         animationType="slide"
-        onRequestClose={() => setDeleteModalVisible(false)}
-      >
+        onRequestClose={() => setDeleteModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalText}>
@@ -254,14 +259,12 @@ export default function HomePage() {
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.confirmButton}
-                onPress={handleDeleteCustomer}
-              >
+                onPress={handleDeleteCustomer}>
                 <Text style={styles.buttonText}>Delete</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.cancelButton}
-                onPress={() => setDeleteModalVisible(false)}
-              >
+                onPress={() => setDeleteModalVisible(false)}>
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
@@ -329,6 +332,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginVertical: 5,
   },
+
+  submitButton: {
+    backgroundColor: '#28a745',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+
+  submitButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
   searchBar: {
     margin: 10,
     padding: 12,
@@ -373,15 +389,13 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   input: {
-    flex: 1,
     padding: 10,
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 8,
-    marginRight: 10,
+    marginBottom: 20,
   },
   closeButton: {
-    marginTop: 10,
     backgroundColor: '#007bff',
     padding: 10,
     borderRadius: 5,
@@ -403,7 +417,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     elevation: 5,
-    alignItems: 'center',
+    elevation: 5,
   },
   modalText: {
     fontSize: 18,
