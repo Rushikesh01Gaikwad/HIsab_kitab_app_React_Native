@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,25 +11,25 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Footer from './Footer';
-import {CustomerService} from '../apiService'; // Import your API service
-import {UserService} from '../apiService'; // Import your API service
+import { CustomerService } from '../apiService';
+import { UserService } from '../apiService';
 
 export default function HomePage() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [customers, setCustomers] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(''); // State for search query
-  const [filteredCustomers, setFilteredCustomers] = useState([]); // Filtered customers
-  const [loading, setLoading] = useState(false); // State for loading spinner
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [userID, setUserId] = useState(null);
-  const navigation = useNavigation();
-  const [selectedCustomer, setSelectedCustomer] = useState(null); // State for selected customer
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
   const [paidAmount, setPaidAmount] = useState(0);
   const [receivedAmount, setReceivedAmount] = useState(0);
   const [businessName, setBusinessName] = useState('Hisab Kitab');
+  const navigation = useNavigation();
 
   const getUserID = async () => {
     try {
@@ -39,11 +39,10 @@ export default function HomePage() {
         setBusinessName(user.businessName);
         setPaidAmount(user.paidAmount);
         setReceivedAmount(user.recAmount);
-        console.log(user);
         return user.userID;
       }
     } catch (error) {
-      console.warn('Error fetching user data:', error.message);
+      console.error('Error fetching user data:', error.message);
     }
     return null;
   };
@@ -56,23 +55,20 @@ export default function HomePage() {
         return;
       }
       setUserId(retrievedUserID);
-
-      fetchCustomers();
+      fetchCustomers(retrievedUserID);
     })();
   }, []);
 
-  // Fetch customers from API
-  const fetchCustomers = async () => {
+  const fetchCustomers = async (userID) => {
     try {
       setLoading(true);
       const response = await CustomerService.getAllCustomersById(userID);
       const customerData = response.data || [];
       setCustomers(customerData);
-      // console.log('Customers:', customerData);
-      setFilteredCustomers(customerData); // Initialize filtered customers
+      setFilteredCustomers(customerData);
     } catch (error) {
       console.error('Error fetching customers:', error);
-      alert('Failed to load customers.');
+      Alert.alert('Error', 'Failed to load customers.');
     } finally {
       setLoading(false);
     }
@@ -81,19 +77,20 @@ export default function HomePage() {
   const handleAddBusiness = async () => {
     if (businessName.trim()) {
       try {
-        // Save the business name to AsyncStorage
-        await AsyncStorage.setItem('businessName', businessName);
+        const response = await UserService.getUserById(userID);
+        const currentUser = response.data;
 
-        // Update the state with the new business name
+        const updatedUser = { ...currentUser, businessName };
+
+        await UserService.updateUser(userID, updatedUser);
+
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
         setBusinessName(businessName);
-
-        // Close the modal
         setModalVisible(false);
 
-        // Optional: Show success alert
         Alert.alert('Success', 'Business name updated successfully.');
       } catch (error) {
-        console.error('Error saving business name:', error);
+        console.error('Error updating business name:', error);
         Alert.alert('Error', 'Failed to save business name.');
       }
     } else {
@@ -103,49 +100,46 @@ export default function HomePage() {
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem('user'); // Clear the stored user data
-      navigation.navigate('Login'); // Navigate back to the Login screen
+      await AsyncStorage.removeItem('user');
+      navigation.navigate('Login');
     } catch (error) {
       console.error('Error logging out:', error);
     }
   };
 
-  // Filter customers based on search query
   useEffect(() => {
-    if (searchQuery.trim() === '') {
+    if (!searchQuery.trim()) {
       setFilteredCustomers(customers);
     } else {
-      const filtered = customers.filter(customer =>
-        customer.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      setFilteredCustomers(
+        customers.filter(customer =>
+          customer.name.toLowerCase().includes(searchQuery.toLowerCase()),
+        ),
       );
-      setFilteredCustomers(filtered);
     }
   }, [searchQuery, customers]);
 
   const handleDeleteCustomer = async () => {
     try {
       setLoading(true);
-      await CustomerService.deleteCustomer(selectedCustomer.customerID); // Call delete API
+      await CustomerService.deleteCustomer(selectedCustomer.customerID);
 
-      // Fetch updated user data from the server
-      const response = await UserService.getUserById(userID); // Replace with your API endpoint
+      const response = await UserService.getUserById(userID);
       const updatedUser = response.data;
-      // Update AsyncStorage with the latest user data
-      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
 
-      // Update local state
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
       setPaidAmount(updatedUser.paidAmount);
       setReceivedAmount(updatedUser.recAmount);
 
       const updatedCustomers = customers.filter(
-        customer => customer.id !== selectedCustomer.id,
+        customer => customer.customerID !== selectedCustomer.customerID,
       );
       setCustomers(updatedCustomers);
       setFilteredCustomers(updatedCustomers);
-      fetchCustomers();
+
       Alert.alert('Success', 'Customer deleted successfully.');
     } catch (error) {
-      //console.log('Error deleting customer:', error);
+      console.error('Error deleting customer:', error);
       Alert.alert('Error', 'Failed to delete customer.');
     } finally {
       setLoading(false);
@@ -160,25 +154,20 @@ export default function HomePage() {
 
   return (
     <View style={styles.container}>
-      {/* Header Section */}
       <View style={styles.header}>
         <Text style={styles.companyName}>{businessName}</Text>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            onPress={() => setModalVisible(true)}
-            style={styles.addBusinessButton}>
-            <Text style={styles.headerButtonText}>Add Business</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={() => setModalVisible(true)}
+          style={styles.addBusinessButton}>
+          <Text style={styles.headerButtonText}>Add Business</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Business Modal */}
-      {/* Business Modal */}
       <Modal
-        transparent={true}
+        transparent
         visible={isModalVisible}
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}>
@@ -204,7 +193,6 @@ export default function HomePage() {
         </View>
       </Modal>
 
-      {/* Total Amount Section */}
       <View style={styles.summarySection}>
         <Text style={styles.summaryText}>Total Paid: {paidAmount || 0}</Text>
         <Text style={styles.summaryText}>
@@ -212,42 +200,32 @@ export default function HomePage() {
         </Text>
       </View>
 
-      {/* Search Bar */}
       <TextInput
         style={styles.searchBar}
-        placeholderTextColor="gray"
         placeholder="Search Customer"
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
 
-      {/* Customer List */}
       {loading ? (
-        <ActivityIndicator
-          size="large"
-          color="#007bff"
-          style={{marginTop: 20}}
-        />
+        <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 20 }} />
       ) : (
         <FlatList
-          data={filteredCustomers} // Use filtered customers for display
+          data={filteredCustomers}
           keyExtractor={(item, index) => index.toString()}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.customerItem}
-              onPress={() =>
-                navigation.navigate('CustomerHomePage', {customer: item})
-              }
+              onPress={() => navigation.navigate('CustomerHomePage', { customer: item })}
               onLongPress={() => handleLongPress(item)}>
-              <Text style={styles.customerText}>{item.name}</Text>{' '}
-              {/* Adjust key as per API */}
+              <Text style={styles.customerText}>{item.name}</Text>
             </TouchableOpacity>
           )}
         />
       )}
 
       <Modal
-        transparent={true}
+        transparent
         visible={isDeleteModalVisible}
         animationType="slide"
         onRequestClose={() => setDeleteModalVisible(false)}>
@@ -272,7 +250,6 @@ export default function HomePage() {
         </View>
       </Modal>
 
-      {/* Footer Component */}
       <Footer navigation={navigation} activeTab="Home" />
     </View>
   );
