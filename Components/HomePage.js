@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -11,11 +11,11 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Footer from './Footer';
-import { CustomerService } from '../apiService';
-import { UserService } from '../apiService';
+import {CustomerService} from '../apiService';
+import {UserService} from '../apiService';
 
 export default function HomePage() {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -59,7 +59,7 @@ export default function HomePage() {
     })();
   }, []);
 
-  const fetchCustomers = async (userID) => {
+  const fetchCustomers = async userID => {
     try {
       setLoading(true);
       const response = await CustomerService.getAllCustomersById(userID);
@@ -80,7 +80,7 @@ export default function HomePage() {
         const response = await UserService.getUserById(userID);
         const currentUser = response.data;
 
-        const updatedUser = { ...currentUser, businessName };
+        const updatedUser = {...currentUser, businessName};
 
         await UserService.updateUser(userID, updatedUser);
 
@@ -156,14 +156,16 @@ export default function HomePage() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.companyName}>{businessName}</Text>
-        <TouchableOpacity
-          onPress={() => setModalVisible(true)}
-          style={styles.addBusinessButton}>
-          <Text style={styles.headerButtonText}>Add Business</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <View>
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            style={styles.addBusinessButton}>
+            <Text style={styles.headerButtonText}>➕</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Text style={styles.logoutText}>↪️</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Modal
@@ -208,15 +210,21 @@ export default function HomePage() {
       />
 
       {loading ? (
-        <ActivityIndicator size="large" color="#007bff" style={{ marginTop: 20 }} />
+        <ActivityIndicator
+          size="large"
+          color="#007bff"
+          style={{marginTop: 20}}
+        />
       ) : (
         <FlatList
           data={filteredCustomers}
           keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
+          renderItem={({item}) => (
             <TouchableOpacity
               style={styles.customerItem}
-              onPress={() => navigation.navigate('CustomerHomePage', { customer: item })}
+              onPress={() =>
+                navigation.navigate('CustomerHomePage', {customer: item})
+              }
               onLongPress={() => handleLongPress(item)}>
               <Text style={styles.customerText}>{item.name}</Text>
             </TouchableOpacity>
