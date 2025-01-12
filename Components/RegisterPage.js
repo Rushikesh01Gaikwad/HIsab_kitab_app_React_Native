@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,59 @@ import {
   StyleSheet,
   Switch,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 
-export default function RegisterPage({navigation}) {
+import { UserService } from '../apiService';
+
+export default function RegisterPage({ navigation }) {
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
   const [toggle, setToggle] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [businessName, setBusinessName] = useState('');
 
-  const handleRegister = () => {
-    navigation.navigate('Login'); // Navigate to Login
+  const handleRegister = async () => {
+    // Input validation
+    if (!name || !mobile || !password || !businessName) {
+      Alert.alert('Validation Error', 'All fields are required.');
+      return;
+    }
+
+    if (mobile.length < 10) {
+      Alert.alert('Validation Error', 'Mobile number must be at least 10 digits.');
+      return;
+    }
+
+
+    const user = {
+      name,
+      mobile,
+      password,
+      recAmount: 0,
+      paidAmount: 0,
+      businessName,
+      staffs: [],
+      customers: []
+    };
+
+    try {
+      setLoading(true);
+      const response = await UserService.createUser(user); // API call
+      setLoading(false);
+
+      if (response.status === 201) {
+        Alert.alert('Success', 'User registered successfully!');
+        navigation.navigate('Login'); // Navigate to Login on success
+      } else {
+        Alert.alert('Error', 'Failed to register user. Please try again.');
+      }
+    } catch (error) {
+      setLoading(false);
+      console.warn(error);
+      Alert.alert('Error', 'An unexpected error occurred.');
+    }
   };
 
   return (
@@ -27,6 +70,12 @@ export default function RegisterPage({navigation}) {
         placeholder="Name"
         value={name}
         onChangeText={setName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Business Name"
+        value={businessName}
+        onChangeText={setBusinessName}
       />
       <TextInput
         style={styles.input}
@@ -46,8 +95,16 @@ export default function RegisterPage({navigation}) {
         <Text>Show Password</Text>
         <Switch value={toggle} onValueChange={() => setToggle(!toggle)} />
       </View>
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Submit</Text>
+      <TouchableOpacity
+        style={[styles.button, loading && { backgroundColor: '#ccc' }]}
+        onPress={handleRegister}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Submit</Text>
+        )}
       </TouchableOpacity>
     </View>
   );

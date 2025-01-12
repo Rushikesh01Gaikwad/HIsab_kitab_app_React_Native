@@ -47,6 +47,9 @@ export const CustomerService = {
   getAllCustomersById: async (id) => {
     return api.get(`/Customers?userID=${id}`);
   },
+  getAllCustomersByUserId: async (id) => {
+    return api.get(`/Customers/User/${id}`);
+  },
   createCustomer: async (customer) => {
     return api.post("/Customers", customer);
   },

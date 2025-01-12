@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Footer from './Footer';
@@ -18,7 +17,6 @@ import {CustomerService} from '../apiService';
 import {UserService} from '../apiService';
 
 export default function HomePage() {
-  const [isModalVisible, setModalVisible] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCustomers, setFilteredCustomers] = useState([]);
@@ -39,6 +37,7 @@ export default function HomePage() {
         setBusinessName(user.businessName);
         setPaidAmount(user.paidAmount);
         setReceivedAmount(user.recAmount);
+        console.log(user);
         return user.userID;
       }
     } catch (error) {
@@ -62,39 +61,16 @@ export default function HomePage() {
   const fetchCustomers = async userID => {
     try {
       setLoading(true);
-      const response = await CustomerService.getAllCustomersById(userID);
+      const response = await CustomerService.getAllCustomersByUserId(userID);
       const customerData = response.data || [];
+      console.log(customerData);
       setCustomers(customerData);
       setFilteredCustomers(customerData);
     } catch (error) {
-      console.error('Error fetching customers:', error);
-      Alert.alert('Error', 'Failed to load customers.');
+      // console.error('Error fetching customers:', error);
+      //Alert.alert('Error', 'Failed to load customers.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAddBusiness = async () => {
-    if (businessName.trim()) {
-      try {
-        const response = await UserService.getUserById(userID);
-        const currentUser = response.data;
-
-        const updatedUser = {...currentUser, businessName};
-
-        await UserService.updateUser(userID, updatedUser);
-
-        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-        setBusinessName(businessName);
-        setModalVisible(false);
-
-        Alert.alert('Success', 'Business name updated successfully.');
-      } catch (error) {
-        console.error('Error updating business name:', error);
-        Alert.alert('Error', 'Failed to save business name.');
-      }
-    } else {
-      Alert.alert('Validation', 'Please enter a valid business name.');
     }
   };
 
@@ -156,44 +132,10 @@ export default function HomePage() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.companyName}>{businessName}</Text>
-        <View>
-          <TouchableOpacity
-            onPress={() => setModalVisible(true)}
-            style={styles.addBusinessButton}>
-            <Text style={styles.headerButtonText}>➕</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <Text style={styles.logoutText}>↪️</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <Text style={styles.logoutText}>✖️</Text>
+        </TouchableOpacity>
       </View>
-
-      <Modal
-        transparent
-        visible={isModalVisible}
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter business name"
-              value={businessName}
-              onChangeText={setBusinessName}
-            />
-            <TouchableOpacity
-              onPress={handleAddBusiness}
-              style={styles.submitButton}>
-              <Text style={styles.submitButtonText}>Submit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
 
       <View style={styles.summarySection}>
         <Text style={styles.summaryText}>Total Paid: {paidAmount || 0}</Text>
@@ -213,8 +155,10 @@ export default function HomePage() {
         <ActivityIndicator
           size="large"
           color="#007bff"
-          style={{marginTop: 20}}
+          style={{marginTop: 50}}
         />
+      ) : filteredCustomers.length === 0 ? (
+        <Text style={styles.noCustomersText}>No customers found</Text>
       ) : (
         <FlatList
           data={filteredCustomers}
@@ -258,7 +202,9 @@ export default function HomePage() {
         </View>
       </Modal>
 
-      <Footer navigation={navigation} activeTab="Home" />
+      <View style={styles.footerContainer}>
+        <Footer navigation={navigation} activeTab="Home" />
+      </View>
     </View>
   );
 }
@@ -272,7 +218,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 15,
+    paddingVertical: 10,
     paddingHorizontal: 20,
     backgroundColor: '#007bff',
   },
@@ -280,23 +226,25 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 22,
     fontWeight: 'bold',
+    width: '80%',
   },
   logoutButton: {
-    backgroundColor: '#dc3545',
+    backgroundColor: '#bfff66',
     paddingVertical: 8,
     paddingHorizontal: 15,
     borderRadius: 5,
   },
   logoutText: {
-    color: '#fff',
+    
     fontWeight: 'bold',
+    width: '20%',
   },
   buttonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   addBusinessButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#bfff66',
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 5,
@@ -338,6 +286,14 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderWidth: 1,
   },
+
+  noCustomersText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: 'gray',
+  },
+
   customerItem: {
     padding: 15,
     backgroundColor: '#fff',
@@ -433,5 +389,15 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  footerContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    //backgroundColor: '#fff', // Adjust based on your design
+    // padding: 10,
+    // borderTopWidth: 1, // Optional: adds a border at the top of the footer
+    // borderTopColor: '#ccc', // Optional: sets the color of the top border
   },
 });
