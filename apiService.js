@@ -34,8 +34,20 @@ export const StaffService = {
   getAllStaff: async () => {
     return api.get("/Staffs");
   },
+  getStaffById: async (id) => {
+    return api.get(`/Staffs?userID=${id}`);
+  },
+  getStaffByUserId: async (id) => {
+    return api.get(`/Staffs/User/${id}`);
+  },
   createStaff: async (staff) => {
     return api.post("/Staffs", staff);
+  },
+  editStaff: async (id, staff) => {
+    return api.put(`/Staffs/${id}`, staff);
+  },
+  deleteStaff: async (id) => {
+    return api.delete(`/Staffs/${id}`);
   },
 };
 

@@ -10,6 +10,7 @@ import NewCustomerPage from './Components/NewCustomerPage';
 import CustomerHomePage from './Components/CustomerHomePage';
 import AddStaff from './Components/AddStaffpage';
 import { View, ActivityIndicator } from 'react-native';
+import StaffList from './Components/StaffList';
 
 const Stack = createStackNavigator();
 
@@ -54,6 +55,7 @@ export default function App() {
         <Stack.Screen name="NewCustomerPage" component={NewCustomerPage} />
         <Stack.Screen name="CustomerHomePage" component={CustomerHomePage} />
         <Stack.Screen name="addStaff" component={AddStaff} options={{ headerShown: false }} />
+        <Stack.Screen name="StaffList" component={StaffList}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

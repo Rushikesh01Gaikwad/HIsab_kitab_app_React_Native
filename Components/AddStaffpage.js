@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,11 @@ import {
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StaffService } from '../apiService'; // Import the StaffService
+import {StaffService} from '../apiService'; // Import the StaffService
 import Footer from './Footer';
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Import Icon
 
-export default function AddStaff({ navigation }) {
+export default function AddStaff({navigation}) {
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
@@ -34,7 +35,6 @@ export default function AddStaff({ navigation }) {
   };
 
   const addStaff = async () => {
-    // Ensure userID is retrieved before proceeding
     const retrievedUserID = await getUserID();
     if (!retrievedUserID) {
       Alert.alert('Error', 'Unable to retrieve user ID. Please try again.');
@@ -42,7 +42,6 @@ export default function AddStaff({ navigation }) {
     }
     setUserId(retrievedUserID);
 
-    // Input validation
     if (!name || !mobile || !password) {
       Alert.alert('Validation Error', 'All fields are required!');
       return;
@@ -56,7 +55,6 @@ export default function AddStaff({ navigation }) {
     setLoading(true);
 
     try {
-      // Prepare staff data
       const staffData = {
         name,
         mobile,
@@ -64,11 +62,10 @@ export default function AddStaff({ navigation }) {
         userId: retrievedUserID,
       };
 
-      // API call to add staff
       const response = await StaffService.createStaff(staffData);
       if (response.status === 201) {
         Alert.alert('Success', 'Staff member added successfully!');
-        navigation.navigate('Home'); // Navigate back to Home
+        navigation.navigate('Home');
       } else {
         throw new Error('Failed to add staff. Try again later.');
       }
@@ -82,6 +79,23 @@ export default function AddStaff({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Add Staff</Text>
+        <TouchableOpacity
+          onPress={async () => {
+            const retrievedUserID = await getUserID();
+            if (retrievedUserID) {
+              navigation.navigate('StaffList', retrievedUserID);
+            } else {
+              Alert.alert('Error', 'Unable to retrieve user ID.');
+            }
+          }}>
+          <Icon name="list" size={28} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Content */}
       <View style={styles.content}>
         <Text style={styles.title}>Add your staff</Text>
         <TextInput
@@ -114,6 +128,8 @@ export default function AddStaff({ navigation }) {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Footer */}
       <Footer navigation={navigation} activeTab="AddStaff" />
     </View>
   );
@@ -122,8 +138,21 @@ export default function AddStaff({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-between', // Ensures content and footer are spaced
+    justifyContent: 'space-between',
     backgroundColor: '#f5f5f5',
+  },
+  header: {
+    height: 60,
+    backgroundColor: '#007bff',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   content: {
     flex: 1,
