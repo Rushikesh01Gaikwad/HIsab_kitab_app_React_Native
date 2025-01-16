@@ -1,28 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { 
+  View, 
+  Text, 
+  FlatList, 
+  StyleSheet, 
+  TouchableOpacity, 
+  ActivityIndicator, 
+  Alert, 
+  Modal 
+} from "react-native";
 import { StaffService } from "../apiService";
 
 export default function StaffList({ route, navigation }) {
   const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedStaff, setSelectedStaff] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const userId = route?.params; // Get user ID passed from AddStaff
-  console.warn(userId)
 
   useEffect(() => {
     const fetchStaff = async () => {
       try {
         const response = await StaffService.getStaffByUserId(userId);
-        console.log(response)
         if (response?.status === 200) {
           setStaffList(response.data);
         } else {
           Alert.alert("Error", "Failed to fetch staff list.");
         }
       } catch (error) {
-       
-        // Alert.alert("Error", "Something went wrong while fetching staff.");
-        // console.warn("Error fetching staff:", error.message);
+        Alert.alert("Error", "Something went wrong while fetching staff.");
       } finally {
         setLoading(false);
       }
@@ -31,11 +38,36 @@ export default function StaffList({ route, navigation }) {
     fetchStaff();
   }, [userId]);
 
+  const deleteStaff = async (id) => {
+    try {
+      const response = await StaffService.deleteStaff(id);
+      if (response?.status === 200) {
+        setStaffList((prevList) => prevList.filter((staff) => staff.id !== id));
+        Alert.alert("Success", "Staff deleted successfully.");
+      } else {
+        Alert.alert("Error", "Failed to delete staff.");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Something went wrong while deleting staff.");
+    } finally {
+      setModalVisible(false);
+    }
+  };
+
+  const handleLongPress = (staff) => {
+    setSelectedStaff(staff);
+    console.log(selectedStaff)
+    setModalVisible(true);
+  };
+
   const renderItem = ({ item }) => (
-    <View style={styles.listItem}>
+    <TouchableOpacity
+      onLongPress={() => handleLongPress(item)}
+      style={styles.listItem}
+    >
       <Text style={styles.staffName}>{item.name}</Text>
       <Text style={styles.staffMobile}>{item.mobile}</Text>
-    </View>
+    </TouchableOpacity>
   );
 
   if (loading) {
@@ -65,6 +97,36 @@ export default function StaffList({ route, navigation }) {
       >
         <Text style={styles.addButtonText}>Add Staff</Text>
       </TouchableOpacity>
+
+      {/* Confirmation Modal */}
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>
+              Are you sure you want to delete {selectedStaff?.name}?
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => deleteStaff(selectedStaff?.staffID)}
+              >
+                <Text style={styles.modalButtonText}>Delete</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -119,5 +181,43 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  modalButton: {
+    backgroundColor: "#d9534f",
+    padding: 10,
+    borderRadius: 8,
+    flex: 1,
+    marginHorizontal: 5,
+    alignItems: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#007bff",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontSize: 16,
   },
 });
