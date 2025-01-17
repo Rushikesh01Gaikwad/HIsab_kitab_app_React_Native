@@ -38,21 +38,28 @@ export default function StaffList({ route, navigation }) {
     fetchStaff();
   }, [userId]);
 
-  const deleteStaff = async (id) => {
-    try {
-      const response = await StaffService.deleteStaff(id);
-      if (response?.status === 200) {
-        setStaffList((prevList) => prevList.filter((staff) => staff.id !== id));
-        Alert.alert("Success", "Staff deleted successfully.");
-      } else {
-        Alert.alert("Error", "Failed to delete staff.");
-      }
-    } catch (error) {
-      Alert.alert("Error", "Something went wrong while deleting staff.");
-    } finally {
-      setModalVisible(false);
+const deleteStaff = async (id) => {
+  try {
+    const response = await StaffService.deleteStaff(id);
+    if (response?.status === 200 || response?.status === 204) {
+      // Update staffList by removing the deleted staff
+      //setStaffList((prevList) => prevList.filter((staff) => staff.id !== id));
+
+      const updatedStaff = staffList.filter(staff => staff.staffID !== selectedStaff.staffID);
+      setStaffList(updatedStaff);
+
+      Alert.alert("Success", "Staff deleted successfully.");
+    } else {
+      Alert.alert("Error", "Failed to delete staff.");
     }
-  };
+  } catch (error) {
+    
+    Alert.alert("Error", "Something went wrong while deleting staff.");
+  } finally {
+    setModalVisible(false);
+  }
+};
+
 
   const handleLongPress = (staff) => {
     setSelectedStaff(staff);
@@ -65,11 +72,13 @@ export default function StaffList({ route, navigation }) {
       onLongPress={() => handleLongPress(item)}
       style={styles.listItem}
     >
-      <Text style={styles.staffName}>{item.name}</Text>
-      <Text style={styles.staffMobile}>{item.mobile}</Text>
+      <View style={styles.staffInfo}>
+        <Text style={styles.staffName}>{item.name}</Text>
+        <Text style={styles.staffMobile}>{item.mobile}</Text>
+      </View>
     </TouchableOpacity>
   );
-
+  
   if (loading) {
     return (
       <View style={styles.loaderContainer}>
@@ -135,12 +144,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#f0f8ff',
   },
   header: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
+
   },
   listItem: {
     backgroundColor: "#fff",
@@ -149,14 +159,22 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     elevation: 2,
   },
+  staffInfo: {
+    flexDirection: "row",
+    // justifyContent: "space-between",
+    alignItems: "center", // Align text vertically in the center
+    width: "100%",
+  },
   staffName: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#333",
+    width: "70%",
   },
   staffMobile: {
     fontSize: 16,
     color: "#666",
+    width: "30%",
   },
   noDataText: {
     fontSize: 18,
@@ -221,3 +239,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
