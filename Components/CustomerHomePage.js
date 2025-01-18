@@ -13,7 +13,7 @@ import {
 import {CustomerService} from '../apiService'; // Update the path accordingly
 import {UserService} from '../apiService'; // Update the path accordingly
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Import icons
 
 export default function CustomerHomePage({route, navigation}) {
   const {customer} = route.params;
@@ -32,6 +32,15 @@ export default function CustomerHomePage({route, navigation}) {
   const [receivedAmount, setReceivedAmount] = useState(0);
 
 
+  const handleCall = () => {
+
+  };
+
+  const handlePDF = () => {
+
+  };
+
+
   const getUserID = async () => {
     try {
       const storedUser = await AsyncStorage.getItem('user');
@@ -47,6 +56,27 @@ export default function CustomerHomePage({route, navigation}) {
 
   useEffect(() => {
     if (customer) {
+      navigation.setOptions({
+        title: `${customer?.name || 'Customer Details'}`, // Dynamic header title
+        headerRight: () => (
+          <View style={{ flexDirection: 'row', marginRight: 10 }}>
+            {/* Call Icon */}
+            <TouchableOpacity
+              onPress={() => handleCall()}
+              style={{ marginHorizontal: 15 }}
+            >
+               <Text style={{ fontSize: 20 }}>📞</Text>
+            </TouchableOpacity>
+            {/* PDF Icon */}
+            <TouchableOpacity
+              onPress={() => handlePDF()}
+              style={{ marginHorizontal: 5 }}
+            >
+              <Text style={{ fontSize: 20 }}>📕</Text>
+            </TouchableOpacity>
+          </View>
+        ),
+      });
       // Prepopulate input fields with customer data for editing
       setName(customer?.name || '');
       setMobile(customer?.mobile || '');
@@ -61,7 +91,7 @@ export default function CustomerHomePage({route, navigation}) {
       setIsDiscountPercentage(customer.discountInPer > 0);
     }
     console.log('Customer:', customer);
-  }, [customer]);
+  }, [customer, navigation]);
 
   const calculateTotal = () => {
     const rateNum = parseFloat(rate) || 0;
