@@ -14,7 +14,7 @@ import {CustomerService} from '../apiService'; // Update the path accordingly
 import {UserService} from '../apiService'; // Update the path accordingly
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Import icons
-import { Linking } from 'react-native'; // Import Linking
+import {Linking} from 'react-native'; // Import Linking
 
 export default function CustomerHomePage({route, navigation}) {
   const {customer} = route.params;
@@ -32,22 +32,21 @@ export default function CustomerHomePage({route, navigation}) {
   const [modalVisible, setModalVisible] = useState(false); // Modal visibility
   const [receivedAmount, setReceivedAmount] = useState(0);
 
-
-const handleCall = () => {
-  if (mobile) {
-    const phoneNumber = `tel:${mobile}`;
-    Linking.openURL(phoneNumber).catch((err) =>
-      Alert.alert('Error', 'Unable to make the call. Please try again later.')
-    );
-  } else {
-    Alert.alert('Error', 'Phone number is not available.');
-  }
-};
-
-  const handlePDF = () => {
-
+  const handleCall = () => {
+    if (customerPhone || customer?.mobile) {
+      const phoneNumber = `tel:${customerPhone}`;
+      Linking.openURL(phoneNumber).catch(err =>
+        Alert.alert(
+          'Error',
+          'Unable to make the call. Please try again later.',
+        ),
+      );
+    } else {
+      Alert.alert('Error', 'Phone number is not available.');
+    }
   };
 
+  const handlePDF = () => {};
 
   const getUserID = async () => {
     try {
@@ -63,40 +62,43 @@ const handleCall = () => {
   };
 
   useEffect(() => {
-    if (customer) {
+    if (customer || customerName) {
       navigation.setOptions({
-        title: `${customer?.name || 'Customer Details'}`, // Dynamic header title
+        title: `${customer?.name || customerName || 'Customer Details'}`,
         headerRight: () => (
-          <View style={{ flexDirection: 'row', marginRight: 10 }}>
+          <View style={{flexDirection: 'row', marginRight: 10}}>
             {/* Call Icon */}
             <TouchableOpacity
               onPress={() => handleCall()}
-              style={{ marginHorizontal: 15 }}
-            >
-               <Text style={{ fontSize: 20 }}>📞</Text>
+              style={{marginHorizontal: 15}}>
+              <Text style={{fontSize: 20}}>📞</Text>
             </TouchableOpacity>
             {/* PDF Icon */}
             <TouchableOpacity
               onPress={() => handlePDF()}
-              style={{ marginHorizontal: 5 }}
-            >
-              <Text style={{ fontSize: 20 }}>📕</Text>
+              style={{marginHorizontal: 5}}>
+              <Text style={{fontSize: 20}}>📕</Text>
             </TouchableOpacity>
           </View>
         ),
       });
       // Prepopulate input fields with customer data for editing
-      setName(customer?.name || '');
-      setMobile(customer?.mobile || '');
-      setRate(customer.rate?.toString() || '');
-      setQuantity(customer.quantity?.toString() || '');
-      setDiscount(
-        (customer.discountInPer || customer.discountInRs)?.toString() || '',
-      );
-      setDescription(customer.description || '');
-      setReceivedAmount(customer.receivedAmt || 0);
-      setCustomerID(customer.customerID || null);
-      setIsDiscountPercentage(customer.discountInPer > 0);
+      if (customer) {
+        setName(customer?.name || '');
+        setMobile(customer?.mobile || '');
+        setRate(customer.rate?.toString() || '');
+        setQuantity(customer.quantity?.toString() || '');
+        setDiscount(
+          (customer.discountInPer || customer.discountInRs)?.toString() || '',
+        );
+        setDescription(customer.description || '');
+        setReceivedAmount(customer.receivedAmt || 0);
+        setCustomerID(customer.customerID || null);
+        setIsDiscountPercentage(customer.discountInPer > 0);
+      } else {
+        setName(customerName || '');
+        setMobile(customerPhone || '');
+      }
     }
     console.log('Customer:', customer);
   }, [customer, navigation]);
@@ -116,8 +118,6 @@ const handleCall = () => {
 
     return total > 0 ? total.toFixed(2) : '0.00';
   };
-  
-  
 
   const handleSubmit = async () => {
     // Parse and validate inputs
@@ -196,9 +196,9 @@ const handleCall = () => {
         await CustomerService.editCustomer(customerID, customerDataUpdate);
         const response = await UserService.getUserById(retrievedUserID); // Replace with your API endpoint
         const updatedUser = response.data;
-          // Update AsyncStorage with the latest user data
-          await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-    
+        // Update AsyncStorage with the latest user data
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+
         Alert.alert('Success', 'Customer details updated successfully!', [
           {text: 'OK', onPress: () => navigation.navigate('Home')},
         ]);
@@ -207,8 +207,8 @@ const handleCall = () => {
         await CustomerService.createCustomer(customerDataInsert);
         const response = await UserService.getUserById(retrievedUserID); // Replace with your API endpoint
         const updatedUser = response.data;
-          // Update AsyncStorage with the latest user data
-          await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+        // Update AsyncStorage with the latest user data
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
 
         Alert.alert('Success', 'Customer details added successfully!', [
           {text: 'OK', onPress: () => navigation.navigate('Home')},
@@ -226,7 +226,7 @@ const handleCall = () => {
   return (
     <View style={styles.container}>
       <View style={styles.recAmtContainer}>
-      <Text style={styles.recAmtText}>Received: ₹{receivedAmount}</Text>
+        <Text style={styles.recAmtText}>Received: ₹{receivedAmount}</Text>
       </View>
 
       <View style={styles.totalContainer}>
