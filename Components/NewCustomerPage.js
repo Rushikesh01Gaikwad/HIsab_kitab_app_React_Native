@@ -11,9 +11,6 @@ export default function NewCustomerPage({ navigation }) {
       Alert.alert('Error', 'Please fill out both fields');
       return;
     }
-
-    // Here, you would typically add the customer to your database or state.
-    // For this demo, we'll just navigate to the CustomerHomePage.
     Alert.alert('Success', `Customer ${name} added successfully!`);
     
     // Navigate to the Customer Home Page

@@ -14,6 +14,7 @@ import {CustomerService} from '../apiService'; // Update the path accordingly
 import {UserService} from '../apiService'; // Update the path accordingly
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Import icons
+import { Linking } from 'react-native'; // Import Linking
 
 export default function CustomerHomePage({route, navigation}) {
   const {customer} = route.params;
@@ -32,9 +33,16 @@ export default function CustomerHomePage({route, navigation}) {
   const [receivedAmount, setReceivedAmount] = useState(0);
 
 
-  const handleCall = () => {
-
-  };
+const handleCall = () => {
+  if (mobile) {
+    const phoneNumber = `tel:${mobile}`;
+    Linking.openURL(phoneNumber).catch((err) =>
+      Alert.alert('Error', 'Unable to make the call. Please try again later.')
+    );
+  } else {
+    Alert.alert('Error', 'Phone number is not available.');
+  }
+};
 
   const handlePDF = () => {
 

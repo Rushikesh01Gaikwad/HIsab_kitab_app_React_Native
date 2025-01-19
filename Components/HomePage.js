@@ -163,6 +163,7 @@ export default function HomePage() {
         <FlatList
           data={filteredCustomers}
           keyExtractor={(item, index) => index.toString()}
+         
           renderItem={({item}) => (
             <TouchableOpacity
               style={styles.customerItem}
@@ -213,6 +214,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    paddingBottom: 60
   },
   header: {
     flexDirection: 'row',
