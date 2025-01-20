@@ -72,20 +72,16 @@ export default function CustomerHomePage({route, navigation}) {
   
       const file = await RNHTMLtoPDF.convert(options);
   
-      Alert.alert(
-        'PDF Generated',
-        `PDF has been saved to ${file.filePath}`,
-        [
-          {
-            text: 'Open',
-            onPress: () => Linking.openURL(`file://${file.filePath}`),
-          },
-          {text: 'OK'},
-        ],
-      );
+      const shareOptions = {
+        title: 'Share Customer Invoice',
+        url: `file://${file.filePath}`,
+        type: 'application/pdf',
+      };
+  
+      await Share.open(shareOptions);
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      Alert.alert('Error', 'Failed to generate PDF. Please try again.');
+      console.error('Error generating or sharing PDF:', error);
+      Alert.alert('Error', 'Failed to generate or share PDF. Please try again.');
     }
   };
 
