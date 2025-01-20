@@ -15,6 +15,9 @@ import {UserService} from '../apiService'; // Update the path accordingly
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Import icons
 import {Linking} from 'react-native'; // Import Linking
+import RNHTMLtoPDF from 'react-native-html-to-pdf';
+// import RNFS from 'react-native-fs'; // For file system access
+import Share from 'react-native-share';
 
 export default function CustomerHomePage({route, navigation}) {
   const {customer} = route.params;
@@ -34,7 +37,7 @@ export default function CustomerHomePage({route, navigation}) {
 
   const handleCall = () => {
     if (customerPhone || customer?.mobile) {
-      const phoneNumber = `tel:${customerPhone}`;
+      const phoneNumber = `tel:${customerPhone || customer?.mobile}`;
       Linking.openURL(phoneNumber).catch(err =>
         Alert.alert(
           'Error',
@@ -46,7 +49,45 @@ export default function CustomerHomePage({route, navigation}) {
     }
   };
 
-  const handlePDF = () => {};
+  const handlePDF = async () => {
+    try {
+      const customerDetails = `
+        <h1>Customer Invoice</h1>
+        <p><strong>Name:</strong> ${name || 'N/A'}</p>
+        <p><strong>Phone:</strong> ${mobile || 'N/A'}</p>
+        <p><strong>Rate:</strong> ₹${rate || '0.00'}</p>
+        <p><strong>Quantity:</strong> ${quantity || '0'}</p>
+        <p><strong>Discount:</strong> ${discount} ${
+        isDiscountPercentage ? '%' : '₹'
+      }</p>
+        <p><strong>Description:</strong> ${description || 'N/A'}</p>
+        <p><strong>Total:</strong> ₹${calculateTotal()}</p>
+      `;
+  
+      const options = {
+        html: customerDetails,
+        fileName: `Customer_Invoice_${Date.now()}`,
+        directory: 'Documents',
+      };
+  
+      const file = await RNHTMLtoPDF.convert(options);
+  
+      Alert.alert(
+        'PDF Generated',
+        `PDF has been saved to ${file.filePath}`,
+        [
+          {
+            text: 'Open',
+            onPress: () => Linking.openURL(`file://${file.filePath}`),
+          },
+          {text: 'OK'},
+        ],
+      );
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      Alert.alert('Error', 'Failed to generate PDF. Please try again.');
+    }
+  };
 
   const getUserID = async () => {
     try {
