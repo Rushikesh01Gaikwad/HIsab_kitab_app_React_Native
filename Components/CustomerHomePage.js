@@ -17,6 +17,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons'; // Import icons
 import {Linking} from 'react-native'; // Import Linking
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 // import RNFS from 'react-native-fs'; // For file system access
+import { generateCustomerInvoiceHTML } from './pdfFormat'; 
 import Share from 'react-native-share';
 
 export default function CustomerHomePage({route, navigation}) {
@@ -51,21 +52,21 @@ export default function CustomerHomePage({route, navigation}) {
 
   const handlePDF = async () => {
     try {
-      const customerDetails = `
-        <h1>Customer Invoice</h1>
-        <p><strong>Name:</strong> ${name || 'N/A'}</p>
-        <p><strong>Phone:</strong> ${mobile || 'N/A'}</p>
-        <p><strong>Rate:</strong> ₹${rate || '0.00'}</p>
-        <p><strong>Quantity:</strong> ${quantity || '0'}</p>
-        <p><strong>Discount:</strong> ${discount} ${
-        isDiscountPercentage ? '%' : '₹'
-      }</p>
-        <p><strong>Description:</strong> ${description || 'N/A'}</p>
-        <p><strong>Total:</strong> ₹${calculateTotal()}</p>
-      `;
+      const invoiceData = {
+        name,
+        mobile,
+        rate,
+        quantity,
+        discount,
+        isDiscountPercentage,
+        description,
+        total: calculateTotal(),
+      };
+  
+      const htmlContent = generateCustomerInvoiceHTML(invoiceData);
   
       const options = {
-        html: customerDetails,
+        html: htmlContent,
         fileName: `Customer_Invoice_${Date.now()}`,
         directory: 'Documents',
       };
@@ -80,10 +81,37 @@ export default function CustomerHomePage({route, navigation}) {
   
       await Share.open(shareOptions);
     } catch (error) {
-      console.error('Error generating or sharing PDF:', error);
+      //console.error('Error generating or sharing PDF:', error);
       Alert.alert('Error', 'Failed to generate or share PDF. Please try again.');
     }
   };
+
+  const handleSendSMS = () => {
+    if (!mobile) {
+      Alert.alert('Error', 'Customer mobile number is not available.');
+      return;
+    }
+  
+    const orderDetails = `
+      Customer Name: ${name || 'N/A'}
+      Mobile: ${mobile || 'N/A'}
+      Rate: ₹${rate || '0.00'}
+      Quantity: ${quantity || '0'}
+      Discount: ${discount} ${isDiscountPercentage ? '%' : '₹'}
+      Description: ${description || 'N/A'}
+      Total Bill: ₹${calculateTotal()}
+      Received Amount: ₹${receivedAmount || '0.00'}
+    `;
+  
+    const smsContent = encodeURIComponent(orderDetails.trim());
+    const smsURL = `sms:${mobile}?body=${smsContent}`;
+  
+    Linking.openURL(smsURL).catch(err => {
+      console.error('Error opening SMS app:', err);
+      Alert.alert('Error', 'Unable to open SMS app. Please try again.');
+    });
+  };
+  
 
   const getUserID = async () => {
     try {
@@ -251,6 +279,8 @@ export default function CustomerHomePage({route, navigation}) {
           {text: 'OK', onPress: () => navigation.navigate('Home')},
         ]);
       }
+      //handleSendSMS();
+      
     } catch (error) {
       console.error('Error saving customer:', error);
       Alert.alert(
@@ -324,7 +354,8 @@ export default function CustomerHomePage({route, navigation}) {
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.footerButton, styles.sentButton]}
-          onPress={handleSubmit}>
+          onPress={handleSubmit}
+          >
           <Text style={styles.buttonText}>Send</Text>
         </TouchableOpacity>
         <TouchableOpacity
