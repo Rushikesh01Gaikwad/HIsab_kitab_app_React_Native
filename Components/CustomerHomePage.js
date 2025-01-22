@@ -10,8 +10,8 @@ import {
   Alert,
   Modal,
 } from 'react-native';
-import {CustomerService} from '../apiService'; // Update the path accordingly
-import {UserService} from '../apiService'; // Update the path accordingly
+import {CustomerService} from '../apiService'; 
+import { UserService } from '../apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Import icons
 import {Linking} from 'react-native'; // Import Linking
@@ -107,7 +107,7 @@ export default function CustomerHomePage({route, navigation}) {
     const smsURL = `sms:${mobile}?body=${smsContent}`;
   
     Linking.openURL(smsURL).catch(err => {
-      console.error('Error opening SMS app:', err);
+      // console.error('Error opening SMS app:', err);
       Alert.alert('Error', 'Unable to open SMS app. Please try again.');
     });
   };
@@ -134,13 +134,13 @@ export default function CustomerHomePage({route, navigation}) {
           <View style={{flexDirection: 'row', marginRight: 10}}>
             {/* Call Icon */}
             <TouchableOpacity
-              onPress={() => handleCall()}
+              // onPress={() => handleCall()}
               style={{marginHorizontal: 15}}>
               <Text style={{fontSize: 20}}>📞</Text>
             </TouchableOpacity>
             {/* PDF Icon */}
             <TouchableOpacity
-              onPress={() => handlePDF()}
+              // onPress={() => handlePDF()}
               style={{marginHorizontal: 5}}>
               <Text style={{fontSize: 20}}>📕</Text>
             </TouchableOpacity>
@@ -256,6 +256,7 @@ export default function CustomerHomePage({route, navigation}) {
     };
 
     try {
+      //console.log('CustomerService:', CustomerService);
       if (customerID) {
         // // Call the editCustomer API for updating existing data
         await CustomerService.editCustomer(customerID, customerDataUpdate);
@@ -282,7 +283,7 @@ export default function CustomerHomePage({route, navigation}) {
       //handleSendSMS();
       
     } catch (error) {
-      console.error('Error saving customer:', error);
+      //console.error('Error saving customer:', error);
       Alert.alert(
         'Error',
         'Failed to save customer details. Please try again.',
