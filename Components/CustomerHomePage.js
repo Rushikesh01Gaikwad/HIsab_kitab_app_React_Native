@@ -10,13 +10,12 @@ import {
   Alert,
   Modal,
 } from 'react-native';
-import {CustomerService} from '../apiService'; 
-import { UserService } from '../apiService';
+import {CustomerService} from '../apiService'; // Update the path accordingly
+import {UserService} from '../apiService'; // Update the path accordingly
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Import icons
 import {Linking} from 'react-native'; // Import Linking
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
-// import RNFS from 'react-native-fs'; // For file system access
 import { generateCustomerInvoiceHTML } from './pdfFormat'; 
 import Share from 'react-native-share';
 
@@ -86,33 +85,6 @@ export default function CustomerHomePage({route, navigation}) {
     }
   };
 
-  const handleSendSMS = () => {
-    if (!mobile) {
-      Alert.alert('Error', 'Customer mobile number is not available.');
-      return;
-    }
-  
-    const orderDetails = `
-      Customer Name: ${name || 'N/A'}
-      Mobile: ${mobile || 'N/A'}
-      Rate: ₹${rate || '0.00'}
-      Quantity: ${quantity || '0'}
-      Discount: ${discount} ${isDiscountPercentage ? '%' : '₹'}
-      Description: ${description || 'N/A'}
-      Total Bill: ₹${calculateTotal()}
-      Received Amount: ₹${receivedAmount || '0.00'}
-    `;
-  
-    const smsContent = encodeURIComponent(orderDetails.trim());
-    const smsURL = `sms:${mobile}?body=${smsContent}`;
-  
-    Linking.openURL(smsURL).catch(err => {
-      // console.error('Error opening SMS app:', err);
-      Alert.alert('Error', 'Unable to open SMS app. Please try again.');
-    });
-  };
-  
-
   const getUserID = async () => {
     try {
       const storedUser = await AsyncStorage.getItem('user');
@@ -129,18 +101,18 @@ export default function CustomerHomePage({route, navigation}) {
   useEffect(() => {
     if (customer || customerName) {
       navigation.setOptions({
-        title: `${customer?.name || customerName || 'Customer Details'}`,
+        title: `${customer?.name || customerName || 'Customer Details'}`, // Dynamic header title
         headerRight: () => (
           <View style={{flexDirection: 'row', marginRight: 10}}>
             {/* Call Icon */}
             <TouchableOpacity
-              // onPress={() => handleCall()}
+              onPress={() => handleCall()}
               style={{marginHorizontal: 15}}>
               <Text style={{fontSize: 20}}>📞</Text>
             </TouchableOpacity>
             {/* PDF Icon */}
             <TouchableOpacity
-              // onPress={() => handlePDF()}
+              onPress={() => handlePDF()}
               style={{marginHorizontal: 5}}>
               <Text style={{fontSize: 20}}>📕</Text>
             </TouchableOpacity>
@@ -256,7 +228,6 @@ export default function CustomerHomePage({route, navigation}) {
     };
 
     try {
-      //console.log('CustomerService:', CustomerService);
       if (customerID) {
         // // Call the editCustomer API for updating existing data
         await CustomerService.editCustomer(customerID, customerDataUpdate);
@@ -280,10 +251,8 @@ export default function CustomerHomePage({route, navigation}) {
           {text: 'OK', onPress: () => navigation.navigate('Home')},
         ]);
       }
-      //handleSendSMS();
-      
     } catch (error) {
-      //console.error('Error saving customer:', error);
+      console.error('Error saving customer:', error);
       Alert.alert(
         'Error',
         'Failed to save customer details. Please try again.',
@@ -355,8 +324,7 @@ export default function CustomerHomePage({route, navigation}) {
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.footerButton, styles.sentButton]}
-          onPress={handleSubmit}
-          >
+          onPress={handleSubmit}>
           <Text style={styles.buttonText}>Send</Text>
         </TouchableOpacity>
         <TouchableOpacity
