@@ -15,9 +15,9 @@ import {UserService} from '../apiService'; // Update the path accordingly
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Import icons
 import {Linking} from 'react-native'; // Import Linking
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
-import { generateCustomerInvoiceHTML } from './pdfFormat'; 
-import Share from 'react-native-share';
+// import RNHTMLtoPDF from 'react-native-html-to-pdf';
+// import { generateCustomerInvoiceHTML } from './pdfFormat'; 
+// import Share from 'react-native-share';
 
 export default function CustomerHomePage({route, navigation}) {
   const {customer} = route.params;
@@ -34,6 +34,7 @@ export default function CustomerHomePage({route, navigation}) {
   const [customerID, setCustomerID] = useState(null);
   const [modalVisible, setModalVisible] = useState(false); // Modal visibility
   const [receivedAmount, setReceivedAmount] = useState(0);
+  const [businessName, setBusinessName] = useState('');
 
   const handleCall = () => {
     if (customerPhone || customer?.mobile) {
@@ -50,39 +51,64 @@ export default function CustomerHomePage({route, navigation}) {
   };
 
   const handlePDF = async () => {
-    try {
-      const invoiceData = {
-        name,
-        mobile,
-        rate,
-        quantity,
-        discount,
-        isDiscountPercentage,
-        description,
-        total: calculateTotal(),
-      };
+    // try {
+    //   const invoiceData = {
+    //     name,
+    //     mobile,
+    //     rate,
+    //     quantity,
+    //     discount,
+    //     isDiscountPercentage,
+    //     description,
+    //     total: calculateTotal(),
+    //   };
   
-      const htmlContent = generateCustomerInvoiceHTML(invoiceData);
+    //   const htmlContent = generateCustomerInvoiceHTML(invoiceData);
   
-      const options = {
-        html: htmlContent,
-        fileName: `Customer_Invoice_${Date.now()}`,
-        directory: 'Documents',
-      };
+    //   const options = {
+    //     html: htmlContent,
+    //     fileName: `Customer_Invoice_${Date.now()}`,
+    //     directory: 'Documents',
+    //   };
   
-      const file = await RNHTMLtoPDF.convert(options);
+    //   const file = await RNHTMLtoPDF.convert(options);
   
-      const shareOptions = {
-        title: 'Share Customer Invoice',
-        url: `file://${file.filePath}`,
-        type: 'application/pdf',
-      };
+    //   const shareOptions = {
+    //     title: 'Share Customer Invoice',
+    //     url: `file://${file.filePath}`,
+    //     type: 'application/pdf',
+    //   };
   
-      await Share.open(shareOptions);
-    } catch (error) {
-      //console.error('Error generating or sharing PDF:', error);
-      Alert.alert('Error', 'Failed to generate or share PDF. Please try again.');
+    //   await Share.open(shareOptions);
+    // } catch (error) {
+    //   //console.error('Error generating or sharing PDF:', error);
+    //   Alert.alert('Error', 'Failed to generate or share PDF. Please try again.');
+    // }
+  };
+
+  const handleSendSMS = () => {
+    if (!mobile) {
+      Alert.alert('Error', 'Customer mobile number is not available.');
+      return;
     }
+  
+    const orderDetails = `
+      ${businessName || 'Hisab Kitab'}
+      Rate: ₹${rate || '0.00'}
+      Quantity: ${quantity || '0'}
+      Discount: ${discount} ${isDiscountPercentage ? '%' : '₹'}
+      Description: ${description || 'N/A'}
+      Total Bill: ₹${calculateTotal()}
+      Received Amount: ₹${receivedAmount || '0.00'}
+    `;
+  
+    const smsContent = encodeURIComponent(orderDetails.trim());
+    const smsURL = `sms:${mobile}?body=${smsContent}`;
+  
+    Linking.openURL(smsURL).catch(err => {
+      // console.error('Error opening SMS app:', err);
+      Alert.alert('Error', 'Unable to open SMS app. Please try again.');
+    });
   };
 
   const getUserID = async () => {
@@ -90,6 +116,7 @@ export default function CustomerHomePage({route, navigation}) {
       const storedUser = await AsyncStorage.getItem('user');
       if (storedUser) {
         const user = JSON.parse(storedUser);
+        setBusinessName(user.businessName);
         return user.userID;
       }
     } catch (error) {
@@ -236,9 +263,11 @@ export default function CustomerHomePage({route, navigation}) {
         // Update AsyncStorage with the latest user data
         await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
 
-        Alert.alert('Success', 'Customer details updated successfully!', [
-          {text: 'OK', onPress: () => navigation.navigate('Home')},
-        ]);
+        // Alert.alert('Success', 'Customer details updated successfully!', [
+        //   {text: 'OK', onPress: () => navigation.navigate('Home')},
+        // ]);
+        handleSendSMS();
+        navigation.navigate('Home')
       } else {
         // Call the createCustomer API for new data
         await CustomerService.createCustomer(customerDataInsert);
@@ -247,9 +276,12 @@ export default function CustomerHomePage({route, navigation}) {
         // Update AsyncStorage with the latest user data
         await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
 
-        Alert.alert('Success', 'Customer details added successfully!', [
-          {text: 'OK', onPress: () => navigation.navigate('Home')},
-        ]);
+        // Alert.alert('Success', 'Customer details added successfully!', [
+        //   {text: 'OK', onPress: () => },
+          
+        // ]);
+        handleSendSMS();
+        navigation.navigate('Home')
       }
     } catch (error) {
       console.error('Error saving customer:', error);
