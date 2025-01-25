@@ -94,12 +94,12 @@ export default function CustomerHomePage({route, navigation}) {
   
     const orderDetails = `
       ${businessName || 'Hisab Kitab'}
-      Rate: ₹${rate || '0.00'}
-      Quantity: ${quantity || '0'}
+      दर: ₹${rate || '0.00'}
+      प्रमाण: ${quantity || '0'}
       Discount: ${discount} ${isDiscountPercentage ? '%' : '₹'}
-      Description: ${description || 'N/A'}
-      Total Bill: ₹${calculateTotal()}
-      Received Amount: ₹${receivedAmount || '0.00'}
+      सवलत: ${description || 'N/A'}
+      एकूण बिल: ₹${calculateTotal()}
+      प्राप्त रक्कम: ₹${receivedAmount || '0.00'}
     `;
   
     const smsContent = encodeURIComponent(orderDetails.trim());
