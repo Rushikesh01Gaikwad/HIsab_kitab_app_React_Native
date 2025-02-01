@@ -15,9 +15,6 @@ import {UserService} from '../apiService'; // Update the path accordingly
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Import icons
 import {Linking} from 'react-native'; // Import Linking
-// import RNHTMLtoPDF from 'react-native-html-to-pdf';
-// import { generateCustomerInvoiceHTML } from './pdfFormat'; 
-// import Share from 'react-native-share';
 
 export default function CustomerHomePage({route, navigation}) {
   const {customer} = route.params;
@@ -51,39 +48,7 @@ export default function CustomerHomePage({route, navigation}) {
   };
 
   const handlePDF = async () => {
-    // try {
-    //   const invoiceData = {
-    //     name,
-    //     mobile,
-    //     rate,
-    //     quantity,
-    //     discount,
-    //     isDiscountPercentage,
-    //     description,
-    //     total: calculateTotal(),
-    //   };
-  
-    //   const htmlContent = generateCustomerInvoiceHTML(invoiceData);
-  
-    //   const options = {
-    //     html: htmlContent,
-    //     fileName: `Customer_Invoice_${Date.now()}`,
-    //     directory: 'Documents',
-    //   };
-  
-    //   const file = await RNHTMLtoPDF.convert(options);
-  
-    //   const shareOptions = {
-    //     title: 'Share Customer Invoice',
-    //     url: `file://${file.filePath}`,
-    //     type: 'application/pdf',
-    //   };
-  
-    //   await Share.open(shareOptions);
-    // } catch (error) {
-    //   //console.error('Error generating or sharing PDF:', error);
-    //   Alert.alert('Error', 'Failed to generate or share PDF. Please try again.');
-    // }
+ 
   };
 
   const handleSendSMS = () => {
@@ -93,11 +58,11 @@ export default function CustomerHomePage({route, navigation}) {
     }
   
     const orderDetails = `
-      ${businessName || 'Hisab Kitab'}
+      ${businessName || 'हिसाब किताब'}
       दर: ₹${rate || '0.00'}
       प्रमाण: ${quantity || '0'}
-      Discount: ${discount} ${isDiscountPercentage ? '%' : '₹'}
-      सवलत: ${description || 'N/A'}
+      सवलत: ${discount} ${isDiscountPercentage ? '%' : '₹'}
+      माहिती: ${description || 'N/A'}
       एकूण बिल: ₹${calculateTotal()}
       प्राप्त रक्कम: ₹${receivedAmount || '0.00'}
     `;
@@ -126,6 +91,7 @@ export default function CustomerHomePage({route, navigation}) {
   };
 
   useEffect(() => {
+    getUserID();
     if (customer || customerName) {
       navigation.setOptions({
         title: `${customer?.name || customerName || 'Customer Details'}`, // Dynamic header title
@@ -183,8 +149,17 @@ export default function CustomerHomePage({route, navigation}) {
     return total > 0 ? total.toFixed(2) : '0.00';
   };
 
+  const calculateReceivedAmount = () => {
+    const receivedAmtNum = parseFloat(receivedAmount) || 0; // Convert current received amount to number
+    const previousReceivedAmt = parseFloat(customer?.receivedAmt) || 0; // Previous received amount from customer data
+    const totalReceivedAmt = (previousReceivedAmt + receivedAmtNum).toFixed(2); // Add new amount to existing
+  console.log(totalReceivedAmt)
+    return (totalReceivedAmt); // Add new amount to existing and format it
+  };
+  
   const handleSubmit = async () => {
     // Parse and validate inputs
+    setModalVisible(false); // Close the modal
     const rateNum = parseFloat(rate);
     const quantityNum = parseFloat(quantity);
     const discountNum = parseFloat(discount);
@@ -295,7 +270,7 @@ export default function CustomerHomePage({route, navigation}) {
   return (
     <View style={styles.container}>
       <View style={styles.recAmtContainer}>
-        <Text style={styles.recAmtText}>Received: ₹{receivedAmount}</Text>
+        <Text style={styles.recAmtText}>Received: ₹{calculateReceivedAmount()}</Text>
       </View>
 
       <View style={styles.totalContainer}>
