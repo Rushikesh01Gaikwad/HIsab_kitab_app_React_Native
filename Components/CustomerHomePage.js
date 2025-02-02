@@ -193,6 +193,7 @@ export default function CustomerHomePage({route, navigation}) {
 
     // Calculate the total based on validated inputs
     const total = calculateTotal();
+    const receivedAmount = calculateReceivedAmount();
 
     // Retrieve the user ID from AsyncStorage
     const retrievedUserID = await getUserID();
@@ -270,7 +271,7 @@ export default function CustomerHomePage({route, navigation}) {
   return (
     <View style={styles.container}>
       <View style={styles.recAmtContainer}>
-        <Text style={styles.recAmtText}>Received: ₹{calculateReceivedAmount()}</Text>
+        <Text style={styles.recAmtText}>Received: ₹{receivedAmount}</Text>
       </View>
 
       <View style={styles.totalContainer}>

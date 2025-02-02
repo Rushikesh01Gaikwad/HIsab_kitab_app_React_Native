@@ -29,7 +29,7 @@ export default function StaffList({ route, navigation }) {
           Alert.alert("Error", "Failed to fetch staff list.");
         }
       } catch (error) {
-        Alert.alert("Error", "Something went wrong while fetching staff.");
+       // Alert.alert("Error", "Something went wrong while fetching staff.");
       } finally {
         setLoading(false);
       }
@@ -90,7 +90,7 @@ const deleteStaff = async (id) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Staff List</Text>
+      {/* <Text style={styles.header}>Staff List</Text> */}
       {staffList.length > 0 ? (
         <FlatList
           data={staffList}

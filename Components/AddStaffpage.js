@@ -83,6 +83,7 @@ export default function AddStaff({navigation}) {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Add Staff</Text>
         <TouchableOpacity
+        style={styles.ListStaff}
           onPress={async () => {
             const retrievedUserID = await getUserID();
             if (retrievedUserID) {
@@ -91,7 +92,7 @@ export default function AddStaff({navigation}) {
               Alert.alert('Error', 'Unable to retrieve user ID.');
             }
           }}>
-          <Icon name="list" size={28} color="#fff" />
+            <Text style={styles.ListBtn}>☰</Text>
         </TouchableOpacity>
       </View>
 
@@ -153,6 +154,19 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
+  },
+
+  ListStaff: {
+    backgroundColor: '#bfff66',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  ListBtn: {
+    
+    fontWeight: 'bold',
+    fontSize:15
+    //width: '20%',
   },
   content: {
     flex: 1,

@@ -238,8 +238,9 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     
-    fontWeight: 'bold',
-    width: '20%',
+    //fontWeight: 'bold',
+    fontSize:15
+    //width: '20%',
   },
   buttonContainer: {
     flexDirection: 'row',
